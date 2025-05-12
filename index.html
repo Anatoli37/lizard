@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Цифровий годинник з календарем, будильником і експортом до Excel</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/shim.min.js" integrity="sha512-nPnkC29R0sikt0ieZaAkk28Ib7Y1Dz7IqePgELH30NnSi1DzG4x+envJAOHz8ZSAveLXAHTR3ai2E9DZUsT8pQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #282c34;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 2rem;
+        }
+        #clock, #date, #calendar {
+            padding: 20px;
+            border-radius: 10px;
+            background: #444;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        #calendar select {
+            font-size: 1rem;
+            margin: 5px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="date">Дата: YYYY-MM-DD</div>
+    <div id="clock">00:00:00:000</div>
+
+    <div id="calendar">
+        <label for="month">Оберіть місяць:</label>
+        <select id="month" onchange="updateCalendar()"></select>
+        <label for="year">Оберіть рік:</label>
+        <select id="year" onchange="updateCalendar()"></select>
+        <div id="days"></div>
+    </div>
+
+    <label for="alarmTime">Встановити будильник:</label>
+    <input type="time" id="alarmTime">
+    <button onclick="setAlarm()">Поставити будильник</button>
+    <p id="alarmMessage"></p>
+
+    <button onclick="exportToExcel()">Експортувати в Excel</button>
+
+    <script>
+        let alarmTime = null;
+        let alarmSet = false;
+
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}:${milliseconds}`;
+            
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            document.getElementById('date').textContent = `Дата: ${year}-${month}-${day}`;
+
+            if (alarmSet && `${hours}:${minutes}` === alarmTime) {
+                alert("Час прокидатися! ⏰");
+                alarmSet = false;
+            }
+        }
+
+        function setAlarm() {
+            alarmTime = document.getElementById('alarmTime').value;
+            if (alarmTime) {
+                alarmSet = true;
+                document.getElementById('alarmMessage').textContent = `Будильник встановлено на ${alarmTime}`;
+            } else {
+                document.getElementById('alarmMessage').textContent = "Будь ласка, встановіть час будильника.";
+            }
+        }
+
+        function setupCalendar() {
+            const monthSelect = document.getElementById('month');
+            const yearSelect = document.getElementById('year');
+            const currentYear = new Date().getFullYear();
+
+            for (let i = 0; i < 12; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = new Date(2025, i).toLocaleString('uk', { month: 'long' });
+                monthSelect.appendChild(option);
+            }
+
+            for (let i = currentYear - 10; i <= currentYear + 10; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                yearSelect.appendChild(option);
+            }
+
+            monthSelect.value = new Date().getMonth();
+            yearSelect.value = currentYear;
+            updateCalendar();
+        }
+
+        function updateCalendar() {
+            const month = parseInt(document.getElementById('month').value);
+            const year = parseInt(document.getElementById('year').value);
+            const daysDiv = document.getElementById('days');
+            daysDiv.innerHTML = "";
+
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            for (let i = 1; i <= daysInMonth; i++) {
+                const day = document.createElement('span');
+                day.textContent = i + " ";
+                daysDiv.appendChild(day);
+            }
+        }
+
+        function exportToExcel() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+            const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+            let data = [
+                ["Дата", "Час", "Мілісекунди"],
+                [date, `${hours}:${minutes}:${seconds}`, milliseconds]
+            ];
+
+            let ws = XLSX.utils.aoa_to_sheet(data);
+            let wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Час і Дата");
+
+            XLSX.writeFile(wb, "clock_data.xlsx");
+        }
+
+        setupCalendar();
+        setInterval(updateClock, 10);
+        updateClock();
+    </script>
+</body>
+</html>
