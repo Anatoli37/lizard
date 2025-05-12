@@ -3,152 +3,561 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Цифровий годинник з календарем, будильником і експортом до Excel</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/shim.min.js" integrity="sha512-nPnkC29R0sikt0ieZaAkk28Ib7Y1Dz7IqePgELH30NnSi1DzG4x+envJAOHz8ZSAveLXAHTR3ai2E9DZUsT8pQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <title>Клуб "ЯЩІРКА" - Журнал відвідуваності</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #282c34;
-            color: white;
             font-family: Arial, sans-serif;
-            font-size: 2rem;
-        }
-        #clock, #date, #calendar {
+            margin: 0;
             padding: 20px;
-            border-radius: 10px;
-            background: #444;
-            margin-bottom: 10px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            overflow-x: auto;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            min-width: 1000px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 5px;
             text-align: center;
+            font-size: 12px;
         }
-        #calendar select {
-            font-size: 1rem;
-            margin: 5px;
+        th {
+            background-color: #f2f2f2;
         }
-        button {
-            margin-top: 10px;
-            padding: 10px;
-            font-size: 1.2rem;
+        .header-row {
+            background-color: #ffff00;
+            font-weight: bold;
+        }
+        .member-row {
+            background-color: #66ffff;
+        }
+        .total-row {
+            background-color: #ffff00;
+            font-weight: bold;
+        }
+        .date-cell {
+            background-color: #66ffcc;
+        }
+        .tab-buttons {
+            margin-bottom: 10px;
+        }
+        .tab-button {
+            padding: 8px 15px;
             cursor: pointer;
+            border: 1px solid #ccc;
+            background-color: #f0f0f0;
+        }
+        .tab-button.active {
+            background-color: #66ffcc;
+            border-bottom: none;
+        }
+        .export-btn {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        #currentDate {
+            margin-top: 20px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <div id="date">Дата: YYYY-MM-DD</div>
-    <div id="clock">00:00:00:000</div>
-
-    <div id="calendar">
-        <label for="month">Оберіть місяць:</label>
-        <select id="month" onchange="updateCalendar()"></select>
-        <label for="year">Оберіть рік:</label>
-        <select id="year" onchange="updateCalendar()"></select>
-        <div id="days"></div>
+    <div class="container">
+        <h2>Клуб "ЯЩІРКА" - Журнал відвідуваності</h2>
+        
+        <div class="tab-buttons">
+            <button class="tab-button active" onclick="showTab('attendance')">Відвідуваність</button>
+            <button class="tab-button" onclick="showTab('expenses')">Расходи</button>
+        </div>
+        
+        <div id="attendance" class="tab">
+            <table id="attendanceTable">
+                <thead>
+                    <tr class="header-row">
+                        <th rowspan="2">№ п/п</th>
+                        <th rowspan="2">Прізвище ім'я по батькові</th>
+                        <th rowspan="2">Дата народження</th>
+                        <th colspan="31">ЧИСЛА МІСЯЦЯ</th>
+                        <th rowspan="2">Всього Днів</th>
+                        <th rowspan="2">Годин</th>
+                        <th rowspan="2">Сума в грн за місяць</th>
+                        <th rowspan="2">Сума в грн за день</th>
+                        <th rowspan="2">Заборгованість</th>
+                        <th rowspan="2">Різниця днів боргами</th>
+                    </tr>
+                    <tr class="header-row">
+                        <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
+                        <th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th>
+                        <th>15</th><th>16</th><th>17</th><th>18</th><th>19</th><th>20</th><th>21</th>
+                        <th>22</th><th>23</th><th>24</th><th>25</th><th>26</th><th>27</th><th>28</th>
+                        <th>29</th><th>30</th><th>31</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="member-row">
+                        <td>1</td><td>Лев</td><td>--</td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td>
+                    </tr>
+                    <tr class="member-row">
+                        <td>2</td><td>Маша</td><td>--</td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td>
+                    </tr>
+                    <tr><td colspan="38" style="height: 10px; border: none;"></td></tr>
+                    <tr>
+                        <td colspan="2" style="text-align: center; font-weight: bold;">Діти</td>
+                        <td style="text-align: center; font-weight: bold;">Дата н.</td>
+                        <td style="text-align: center; font-weight: bold;">в.</td>
+                        <td style="text-align: center; font-weight: bold;">гр.</td>
+                        <td colspan="33"></td>
+                    </tr>
+                    <tr>
+                        <td>1</td><td>Борова Віктор Миколайович</td><td>30.12.2015</td><td>4</td><td>5</td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>2</td><td>Курбанов Роман Руслан</td><td>06.09.2020</td><td>4</td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>3</td><td>Гаврилов Михайло</td><td>26.01.2022</td><td>2</td><td>5</td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>4</td><td>Гаврилова Ліза Андріївна</td><td>20.04.2018</td><td>5</td><td>5</td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>5</td><td>Шабуч Майя Олексіївна</td><td>06.11.2020</td><td>4</td><td>10</td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>6</td><td>Кобрун Михась Олександрович</td><td>12.01.2022</td><td>2</td><td>5</td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>7</td><td>Бутько Марійка</td><td>28.11.2021</td><td>3</td><td>6</td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>8</td><td>Хоришків Софія Артурівна</td><td>12.05.2021</td><td>3</td><td>4</td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>9</td><td>Медвідь Яна</td><td>07.03.2023</td><td>3</td><td>5</td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>10</td><td>Марченко Даніло Данилович</td><td>21.01.2023</td><td>1</td><td>5</td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>11</td><td>Омельченко Зоряна</td><td>10.04.2022</td><td>2</td><td>5</td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>12</td><td>Петренко Михайло</td><td>06.07.2021</td><td>3</td><td>2</td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>13</td><td>Романенко Даніло</td><td>23.09.2022</td><td>2</td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>14</td><td>Тарасюк Евеліна</td><td>15.04.2022</td><td>2</td><td>5</td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>15</td><td>Ткачова Аліна Олексіївна</td><td>25.04.2022</td><td>2</td><td>5</td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>16</td><td>Пиль Тетяна Ігорівна</td><td>06.05.2021</td><td>3</td><td>1</td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>17</td><td>Федорковська Яна</td><td>16.01.2022</td><td>2</td><td>5</td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>18</td><td>Стефанків</td><td>03.10.2024</td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>19</td><td>Мілена</td><td>03.10.2024</td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>20</td><td>Ксеня</td><td>15.04.2022</td><td>2</td><td>5</td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>21</td><td>Діана</td><td>03.10.2024</td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>22</td><td>Ева</td><td>03.10.2024</td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>23</td><td>Міра</td><td>03.10.2024</td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>24</td><td></td><td>03.10.2024</td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>25</td><td></td><td>03.10.2024</td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                    <tr><td colspan="38" style="height: 20px; border: none;"></td></tr>
+                    <tr class="total-row">
+                        <td colspan="3" style="text-align: right;">ИТОГО</td>
+                        <td colspan="35"></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                <div style="width: 40%;">
+                    <div class="total-row" style="padding: 5px; text-align: center;">Дата на сьогодні</div>
+                    <div class="date-cell" style="padding: 5px; text-align: center;" id="todayDate">03.10.2024</div>
+                </div>
+                <div style="width: 40%;">
+                    <div class="total-row" style="padding: 5px; text-align: center;">Чистий доход</div>
+                    <div style="border: 1px solid #ccc; padding: 5px; height: 20px;"></div>
+                </div>
+            </div>
+            
+            <button class="export-btn" onclick="exportToExcel()">Експорт в Excel</button>
+        </div>
+        
+        <div id="expenses" class="tab" style="display: none;">
+            <h3>Таблиця витрат</h3>
+            <table id="expensesTable">
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Опис витрат</th>
+                        <th>Сума (грн)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>03.10.2024</td>
+                        <td>Канцтовари</td>
+                        <td>250</td>
+                    </tr>
+                    <tr>
+                        <td>05.10.2024</td>
+                        <td>Матеріали для занять</td>
+                        <td>350</td>
+                    </tr>
+                    <tr>
+                        <td>10.10.2024</td>
+                        <td>Оренда приміщення</td>
+                        <td>2000</td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="export-btn" onclick="exportExpensesToExcel()">Експорт витрат в Excel</button>
+        </div>
     </div>
 
-    <label for="alarmTime">Встановити будильник:</label>
-    <input type="time" id="alarmTime">
-    <button onclick="setAlarm()">Поставити будильник</button>
-    <p id="alarmMessage"></p>
-
-    <button onclick="exportToExcel()">Експортувати в Excel</button>
-
     <script>
-        let alarmTime = null;
-        let alarmSet = false;
-
-        function updateClock() {
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
-            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}:${milliseconds}`;
+        // Встановлення поточної дати
+        function updateDate() {
+            const today = new Date();
+            const day = String(today.getDate()).padStart(2, '0');
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const year = today.getFullYear();
+            document.getElementById('todayDate').textContent = `${day}.${month}.${year}`;
+        }
+        
+        // Запуск при завантаженні сторінки
+        window.onload = function() {
+            updateDate();
+        };
+        
+        // Перемикання між вкладками
+        function showTab(tabName) {
+            const tabs = document.getElementsByClassName('tab');
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].style.display = 'none';
+            }
             
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            document.getElementById('date').textContent = `Дата: ${year}-${month}-${day}`;
-
-            if (alarmSet && `${hours}:${minutes}` === alarmTime) {
-                alert("Час прокидатися! ⏰");
-                alarmSet = false;
+            const buttons = document.getElementsByClassName('tab-button');
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove('active');
             }
+            
+            document.getElementById(tabName).style.display = 'block';
+            document.querySelector(`.tab-button[onclick="showTab('${tabName}')"]`).classList.add('active');
         }
-
-        function setAlarm() {
-            alarmTime = document.getElementById('alarmTime').value;
-            if (alarmTime) {
-                alarmSet = true;
-                document.getElementById('alarmMessage').textContent = `Будильник встановлено на ${alarmTime}`;
+        
+        // Відмітка відвідуваності
+        function markAttendance(row, col) {
+            const cell = document.querySelector(`#attendanceTable tbody tr:nth-child(${row}) td:nth-child(${col + 3})`);
+            if (cell.textContent === '') {
+                cell.textContent = '✓';
+                cell.style.backgroundColor = '#90EE90';
             } else {
-                document.getElementById('alarmMessage').textContent = "Будь ласка, встановіть час будильника.";
+                cell.textContent = '';
+                cell.style.backgroundColor = '';
             }
+            updateTotals();
         }
-
-        function setupCalendar() {
-            const monthSelect = document.getElementById('month');
-            const yearSelect = document.getElementById('year');
-            const currentYear = new Date().getFullYear();
-
-            for (let i = 0; i < 12; i++) {
-                const option = document.createElement('option');
-                option.value = i;
-                option.textContent = new Date(2025, i).toLocaleString('uk', { month: 'long' });
-                monthSelect.appendChild(option);
-            }
-
-            for (let i = currentYear - 10; i <= currentYear + 10; i++) {
-                const option = document.createElement('option');
-                option.value = i;
-                option.textContent = i;
-                yearSelect.appendChild(option);
-            }
-
-            monthSelect.value = new Date().getMonth();
-            yearSelect.value = currentYear;
-            updateCalendar();
+        
+        // Оновлення підсумків
+        function updateTotals() {
+            const rows = document.querySelectorAll('#attendanceTable tbody tr');
+            rows.forEach((row, index) => {
+                if (index < rows.length - 2 && row.cells.length > 5) {
+                    let count = 0;
+                    for (let i = 3; i <= 33; i++) {
+                        if (row.cells[i] && row.cells[i].textContent === '✓') {
+                            count++;
+                        }
+                    }
+                    
+                    // Встановлення кількості днів
+                    if (row.cells[34]) {
+                        row.cells[34].textContent = count;
+                    }
+                    
+                    // Розрахунок суми
+                    const hourlyRate = row.cells[4] ? parseInt(row.cells[4].textContent) || 0 : 0;
+                    if (row.cells[36]) {
+                        row.cells[36].textContent = (count * hourlyRate).toString();
+                    }
+                }
+            });
         }
-
-        function updateCalendar() {
-            const month = parseInt(document.getElementById('month').value);
-            const year = parseInt(document.getElementById('year').value);
-            const daysDiv = document.getElementById('days');
-            daysDiv.innerHTML = "";
-
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            for (let i = 1; i <= daysInMonth; i++) {
-                const day = document.createElement('span');
-                day.textContent = i + " ";
-                daysDiv.appendChild(day);
-            }
+        
+        // Додавання обробників подій для комірок відвідуваності
+        function addCellEventListeners() {
+            const table = document.getElementById('attendanceTable');
+            const rows = table.querySelectorAll('tbody tr');
+            
+            rows.forEach((row, rowIndex) => {
+                if (rowIndex >= 3 && rowIndex < rows.length - 2) { // Пропускаємо заголовки та підсумкові рядки
+                    for (let colIndex = 3; colIndex <= 33; colIndex++) {
+                        const cell = row.cells[colIndex];
+                        if (cell) {
+                            cell.addEventListener('click', function() {
+                                if (this.textContent === '') {
+                                    this.textContent = '✓';
+                                    this.style.backgroundColor = '#90EE90';
+                                } else {
+                                    this.textContent = '';
+                                    this.style.backgroundColor = '';
+                                }
+                                updateTotals();
+                            });
+                            cell.style.cursor = 'pointer';
+                        }
+                    }
+                }
+            });
         }
-
+        
+        // Експорт в Excel
         function exportToExcel() {
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
-            const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
-            let data = [
-                ["Дата", "Час", "Мілісекунди"],
-                [date, `${hours}:${minutes}:${seconds}`, milliseconds]
-            ];
-
-            let ws = XLSX.utils.aoa_to_sheet(data);
-            let wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Час і Дата");
-
-            XLSX.writeFile(wb, "clock_data.xlsx");
+            const table = document.getElementById('attendanceTable');
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.table_to_sheet(table);
+            
+            // Змінюємо ширину стовпців
+            const wscols = [];
+            for (let i = 0; i < 39; i++) {
+                if (i === 0) wscols.push({ wch: 5 }); // № п/п
+                else if (i === 1) wscols.push({ wch: 30 }); // ПІБ
+                else if (i === 2) wscols.push({ wch: 12 }); // Дата народження
+                else wscols.push({ wch: 6 }); // Інші стовпці
+            }
+            ws['!cols'] = wscols;
+            
+            XLSX.utils.book_append_sheet(wb, ws, "Відвідуваність");
+            XLSX.writeFile(wb, `Клуб_ЯЩІРКА_відвідуваність_${new Date().toLocaleDateString('uk-UA')}.xlsx`);
         }
-
-        setupCalendar();
-        setInterval(updateClock, 10);
-        updateClock();
+        
+        // Експорт витрат в Excel
+        function exportExpensesToExcel() {
+            const table = document.getElementById('expensesTable');
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.table_to_sheet(table);
+            
+            // Змінюємо ширину стовпців
+            const wscols = [
+                { wch: 12 }, // Дата
+                { wch: 40 }, // Опис
+                { wch: 15 }, // Сума
+            ];
+            ws['!cols'] = wscols;
+            
+            XLSX.utils.book_append_sheet(wb, ws, "Витрати");
+            XLSX.writeFile(wb, `Клуб_ЯЩІРКА_витрати_${new Date().toLocaleDateString('uk-UA')}.xlsx`);
+        }
+        
+        // Ініціалізація
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDate();
+            addCellEventListeners();
+            
+            // Додавання можливості редагування значень
+            const editableCells = document.querySelectorAll('#attendanceTable td:nth-child(2), #attendanceTable td:nth-child(3), #attendanceTable td:nth-child(5)');
+            editableCells.forEach(cell => {
+                cell.contentEditable = true;
+                cell.addEventListener('blur', function() {
+                    updateTotals();
+                });
+            });
+        });
     </script>
 </body>
 </html>
