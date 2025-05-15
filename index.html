@@ -748,7 +748,73 @@ background-color: #b92935;
 
 Для експорту в PDF потрібно підключити бібліотеку jsPDF або іншу аналогічну. В поточній версії ця функція симулюється цим повідомленням.`);
     }
-    
+    // Зчитування даних із таблиці у масив
+  function getTableData() {
+    const rows = document.querySelectorAll("#attendance-table tbody tr");
+    const data = [];
+
+    rows.forEach(row => {
+      const name = row.querySelector("td:first-child").textContent.trim();
+      const checkboxes = row.querySelectorAll("input[type='checkbox']");
+      const values = Array.from(checkboxes).map(cb => cb.checked ? 1 : 0);
+      data.push({ name, values });
+    });
+
+    return data;
+  }
+
+  // Запис масиву у URL
+  function saveDataToURL() {
+    const data = getTableData();
+    const jsonString = JSON.stringify(data);
+    const encoded = encodeURIComponent(jsonString);
+    location.hash = "data=" + encoded;
+  }
+
+  // Читання з URL
+  function loadDataFromURL() {
+    const hash = location.hash;
+    if (hash.startsWith("#data=")) {
+      try {
+        const json = decodeURIComponent(hash.slice(6));
+        return JSON.parse(json);
+      } catch (e) {
+        console.error("Помилка декодування URL:", e);
+      }
+    }
+    return null;
+  }
+
+  // Вставлення даних у таблицю
+  function populateTableFromData(data) {
+    const rows = document.querySelectorAll("#attendance-table tbody tr");
+
+    data.forEach((entry, i) => {
+      const row = rows[i];
+      if (!row) return;
+      const checkboxes = row.querySelectorAll("input[type='checkbox']");
+      entry.values.forEach((val, j) => {
+        if (checkboxes[j]) {
+          checkboxes[j].checked = !!val;
+        }
+      });
+    });
+  }
+
+  // Додає слухачі на всі чекбокси
+  function attachCheckboxListeners() {
+    const checkboxes = document.querySelectorAll("#attendance-table input[type='checkbox']");
+    checkboxes.forEach(cb => {
+      cb.addEventListener("change", saveDataToURL);
+    });
+  }
+
+  // Запуск після завантаження
+  window.addEventListener("load", () => {
+    const data = loadDataFromURL();
+    if (data) populateTableFromData(data);
+    attachCheckboxListeners();
+  });
     // Запускаємо ініціалізацію при завантаженні сторінки
     window.addEventListener('load', initPage);
 
@@ -761,6 +827,7 @@ background-color: #b92935;
     document.getElementById('dateDisplay').textContent = `Сьогодні: ${formattedDate}`;
 
     window.onload = initPage;
+ 
   </script>
 </body>
 </html>
