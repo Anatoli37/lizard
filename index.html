@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -36,7 +37,8 @@
     }
     table {
       width: 100%;
-      border-collapse: collapse;
+      border-collapse: separate; /* Змінено з collapse на separate для роботи фіксованої колонки */
+      border-spacing: 0; /* Встановлюємо відступи між клітинками на 0 */
       margin-bottom: 20px;
       table-layout: fixed;
     }
@@ -51,9 +53,19 @@
       color: white;
       position: sticky;
       top: 0;
+      z-index: 10; /* Додаємо z-index для заголовків */
     }
+    /* Стилі для фіксованої першої колонки */
     .name-column {
       width: 150px;
+      position: sticky;
+      left: 0;
+      background-color: white; /* Задній фон для фіксованої колонки */
+      z-index: 5; /* Вищий z-index для перекриття інших клітинок */
+    }
+    th.name-column {
+      background-color: #3498db; /* Колір заголовка фіксованої колонки */
+      z-index: 15; /* Вищий z-index для фіксованого заголовка */
     }
     .day-column {
       width: 30px;
@@ -126,19 +138,50 @@
     .table-container {
       overflow-x: auto;
       margin-top: 20px;
+      position: relative; /* Додаємо для правильного позиціонування фіксованих елементів */
     }
     .hidden-day {
       display: none;
     }
-    .price-display {
-      font-weight: bold;
+    .summary-container {
+      background-color: #e8f8f5;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .summary-container table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 0;
+    }
+    .summary-container th {
+      background-color: #16a085;
+      color: white;
+    }
+    .summary-container td {
       text-align: center;
-      margin: 10px 0;
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+    /* Додаємо тінь для фіксованої колонки, щоб показати, що вона фіксована */
+    .name-column {
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+    /* Додатковий стиль для комірок з іменами у фіксованій колонці */
+    .name-cell {
+      background-color: white;
+      position: sticky;
+      left: 0;
+      z-index: 5;
+    }
+    .dateDisplay {
+background-color: #b92935;
     }
   </style>
 </head>
 <body>
   <div class="container">
+    <div id="dateDisplay"></div>
     <div class="header">
       <h1>Клуб "ЯЩІРКА" - Облік відвідуваності</h1>
       <div class="clock">🕒 <span id="clock"></span></div>
@@ -188,6 +231,26 @@
       </table>
     </div>
 
+    <div class="summary-container">
+      <h3>Загальна статистика</h3>
+      <table>
+        <tr>
+          <th>Всього дітей</th>
+          <th>Відвідувань (буд. дні)</th>
+          <th>Загалом до сплати</th>
+          <th>Загалом оплачено</th>
+          <th>Баланс</th>
+        </tr>
+        <tr>
+          <td id="totalChildren">0</td>
+          <td id="totalAttendance">0</td>
+          <td id="totalDue">0 грн</td>
+          <td id="totalPaid">0 грн</td>
+          <td id="totalBalance">0 грн</td>
+        </tr>
+      </table>
+    </div>
+
     <div class="button-group">
       <button onclick="saveTableData()">💾 Зберегти дані</button>
       <button onclick="clearTableData()">🗑️ Очистити дані</button>
@@ -200,8 +263,6 @@
       <table id="attendanceTable">
         <thead>
           <tr>
-            <th class="name-column">Ім'я дитини</th>
-            <th class="name-column">Ім'я дитини</th>
             <th class="name-column">Ім'я дитини</th>
             <!-- Дні місяця будуть додані через JavaScript -->
           </tr>
@@ -216,7 +277,8 @@
   <script>
     // Глобальні змінні
     const table = document.getElementById('attendanceTable');
-    const MAX_ROWS = 20;
+    const DEFAULT_ROWS = 20;
+    const MAX_ROWS = 30;
     const DAILY_RATE = 500; // Базова вартість за день
     let currentMonthDays = 31;
     let weekendDays = []; // Масив для зберігання вихідних днів
@@ -232,6 +294,11 @@
       
       // Оновлюємо відображення днів місяця
       setupTable();
+      
+      // Додаємо за замовчуванням рядки для 20 дітей
+      for (let i = 1; i < DEFAULT_ROWS; i++) {
+        addRow();
+      }
       
       // Завантажуємо збережені дані
       loadTableData();
@@ -321,7 +388,14 @@
     // Зміна місяця у вибірнику
     function changeMonth() {
       setupTable();
+      
+      // Додаємо за замовчуванням рядки для 20 дітей
+      for (let i = 1; i < DEFAULT_ROWS; i++) {
+        addRow();
+      }
+      
       loadTableData();
+      updateAllTotals();
     }
     
     // Оновлення калькулятора
@@ -369,10 +443,41 @@
       inputs[balanceIndex].value = paidAmount - totalDue;
     }
     
-    // Оновлення всіх підсумків таблиці
+    // Оновлення підсумків таблиці та загальних сум
     function updateAllTotals() {
       const rows = table.querySelectorAll('tbody tr');
-      rows.forEach(row => updateRowTotals(row));
+      let totalChildren = 0;
+      let totalAttendance = 0;
+      let totalDueAmount = 0;
+      let totalPaidAmount = 0;
+      
+      rows.forEach(row => {
+        updateRowTotals(row);
+        
+        // Підрахунок загальних сум
+        const inputs = row.querySelectorAll('input');
+        const nameValue = inputs[0].value.trim();
+        const totalAttended = parseInt(inputs[currentMonthDays + 1].value) || 0;
+        const dueAmount = parseInt(inputs[currentMonthDays + 2].value) || 0;
+        const paidAmount = parseInt(inputs[currentMonthDays + 3].value) || 0;
+        
+        // Якщо рядок містить ім'я дитини, враховуємо його в загальній статистиці
+        if (nameValue) {
+          totalChildren++;
+          totalAttendance += totalAttended;
+          totalDueAmount += dueAmount;
+          totalPaidAmount += paidAmount;
+        }
+      });
+      
+      // Оновлюємо статистику
+      document.getElementById('totalChildren').textContent = totalChildren;
+      document.getElementById('totalAttendance').textContent = totalAttendance;
+      document.getElementById('totalDue').textContent = totalDueAmount + ' грн';
+      document.getElementById('totalPaid').textContent = totalPaidAmount + ' грн';
+      document.getElementById('totalBalance').textContent = (totalPaidAmount - totalDueAmount) + ' грн';
+      
+      // Оновлюємо калькулятор
       updateCalculator();
     }
     
@@ -380,8 +485,9 @@
     function createTableRow() {
       const tr = document.createElement('tr');
       
-      // Додаємо комірку для імені
+      // Додаємо комірку для імені з класом для фіксованої колонки
       const nameTd = document.createElement('td');
+      nameTd.className = 'name-cell'; // Додаємо клас для фіксованої комірки
       const nameInput = document.createElement('input');
       nameInput.type = 'text';
       nameInput.placeholder = 'Введіть ім\'я';
@@ -453,6 +559,7 @@
       const newRow = createTableRow();
       tbody.appendChild(newRow);
       updateRowTotals(newRow);
+      updateAllTotals();
       
       // Додаємо обробники подій для нового рядка
       const inputs = newRow.querySelectorAll('input');
@@ -460,11 +567,13 @@
         if (input.type === 'checkbox') {
           input.addEventListener('change', () => {
             updateRowTotals(newRow);
+            updateAllTotals();
             saveTableData();
           });
         } else if (!input.readOnly) {
           input.addEventListener('input', () => {
             updateRowTotals(newRow);
+            updateAllTotals();
             saveTableData();
           });
         }
@@ -474,14 +583,15 @@
     // Видалення останнього рядка
     function removeLastRow() {
       const tbody = table.querySelector('tbody');
-      if (tbody.children.length <= 1) {
-        alert('Неможливо видалити останній рядок');
+      if (tbody.children.length <= DEFAULT_ROWS) {
+        alert(`Неможливо видалити рядки. Мінімальна кількість рядків: ${DEFAULT_ROWS}`);
         return;
       }
       
       if (confirm('Ви впевнені, що хочете видалити останній рядок?')) {
         tbody.removeChild(tbody.lastChild);
         saveTableData();
+        updateAllTotals();
       }
     }
     
@@ -580,11 +690,13 @@
           if (input.type === 'checkbox') {
             input.addEventListener('change', () => {
               updateRowTotals(row);
+              updateAllTotals();
               saveTableData();
             });
           } else if (!input.readOnly) {
             input.addEventListener('input', () => {
               updateRowTotals(row);
+              updateAllTotals();
               saveTableData();
             });
           }
@@ -602,6 +714,13 @@
         
         // Перезавантажуємо таблицю
         setupTable();
+        
+        // Додаємо за замовчуванням рядки для 20 дітей
+        for (let i = 1; i < DEFAULT_ROWS; i++) {
+          addRow();
+        }
+        
+        updateAllTotals();
       }
     }
     
@@ -621,6 +740,14 @@
     
     // Запускаємо ініціалізацію при завантаженні сторінки
     window.addEventListener('load', initPage);
+
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString('uk-UA', {
+      day: 'numeric',
+      month: 'long'
+    });
+
+    document.getElementById('dateDisplay').textContent = `Сьогодні: ${formattedDate}`;
   </script>
 </body>
 </html>
