@@ -827,7 +827,332 @@ background-color: #b92935;
     document.getElementById('dateDisplay').textContent = `Сьогодні: ${formattedDate}`;
 
     window.onload = initPage;
- 
+ // Функція для перетворення даних таблиці в JSON
+function tableToJSON() {
+  const data = [];
+  const monthIndex = document.getElementById('monthSelect').value;
+  const year = document.getElementById('yearInput').value;
+  const dailyRate = document.getElementById('dailyRate').value;
+  const rows = table.querySelectorAll('tbody tr');
+  
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const name = inputs[0].value.trim();
+    
+    // Якщо рядок порожній, пропускаємо його
+    if (!name) return;
+    
+    const rowData = {
+      name: name,
+      days: [],
+      paid: parseInt(inputs[currentMonthDays + 3].value) || 0,
+      attendance: parseInt(inputs[currentMonthDays + 1].value) || 0,
+      due: parseInt(inputs[currentMonthDays + 2].value) || 0,
+      balance: parseInt(inputs[currentMonthDays + 4].value) || 0
+    };
+    
+    // Збираємо дані про відвідування по днях
+    for (let i = 1; i <= currentMonthDays; i++) {
+      rowData.days.push(inputs[i].checked ? 1 : 0);
+    }
+    
+    data.push(rowData);
+  });
+  
+  // Додаємо метадані
+  const metadata = {
+    month: monthIndex,
+    year: year,
+    dailyRate: dailyRate,
+    weekendDays: weekendDays,
+    generatedAt: new Date().toISOString(),
+    totalChildren: document.getElementById('totalChildren').textContent,
+    totalAttendance: document.getElementById('totalAttendance').textContent,
+    totalDue: document.getElementById('totalDue').textContent,
+    totalPaid: document.getElementById('totalPaid').textContent,
+    totalBalance: document.getElementById('totalBalance').textContent
+  };
+  
+  return {
+    metadata: metadata,
+    attendanceData: data
+  };
+}
+
+// Функція для завантаження JSON даних в таблицю
+function loadJSONToTable(jsonData) {
+  if (!jsonData || !jsonData.metadata || !jsonData.attendanceData || !Array.isArray(jsonData.attendanceData)) {
+    console.error("Неправильний формат JSON даних");
+    return false;
+  }
+  
+  try {
+    // Встановлюємо метадані
+    document.getElementById('monthSelect').value = jsonData.metadata.month;
+    document.getElementById('yearInput').value = jsonData.metadata.year;
+    document.getElementById('dailyRate').value = jsonData.metadata.dailyRate || DAILY_RATE;
+    
+    // Перезавантажуємо таблицю для нового місяця
+    setupTable();
+    
+    const tbody = table.querySelector('tbody');
+    while (tbody.firstChild) {
+      tbody.removeChild(tbody.firstChild);
+    }
+    
+    // Додаємо рядки з даними
+    jsonData.attendanceData.forEach(rowData => {
+      const row = createTableRow();
+      tbody.appendChild(row);
+      
+      const inputs = row.querySelectorAll('input');
+      inputs[0].value = rowData.name || '';
+      
+      // Встановлюємо чекбокси відвідування
+      if (rowData.days && Array.isArray(rowData.days)) {
+        rowData.days.forEach((checked, index) => {
+          if (index < currentMonthDays) {
+            inputs[index + 1].checked = checked === 1;
+          }
+        });
+      }
+      
+      // Встановлюємо оплату
+      inputs[currentMonthDays + 3].value = rowData.paid || 0;
+      
+      // Додаємо обробники подій
+      setupRowEventListeners(row);
+    });
+    
+    // Оновлюємо всі підсумки
+    updateAllTotals();
+    return true;
+  } catch (error) {
+    console.error("Помилка завантаження JSON:", error);
+    return false;
+  }
+}
+
+// Функція для відокремлення обробників подій рядка
+function setupRowEventListeners(row) {
+  const inputs = row.querySelectorAll('input');
+  inputs.forEach(input => {
+    if (input.type === 'checkbox') {
+      input.addEventListener('change', () => {
+        updateRowTotals(row);
+        updateAllTotals();
+        saveTableData();
+      });
+    } else if (!input.readOnly) {
+      input.addEventListener('input', () => {
+        updateRowTotals(row);
+        updateAllTotals();
+        saveTableData();
+      });
+    }
+  });
+}
+
+// Функція для експорту JSON
+function exportToJSON() {
+  const jsonData = tableToJSON();
+  const jsonString = JSON.stringify(jsonData, null, 2);
+  
+  // Створюємо тимчасове посилання для завантаження файлу
+  const monthNames = [
+    'Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень',
+    'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'
+  ];
+  const monthIndex = parseInt(document.getElementById('monthSelect').value);
+  const year = document.getElementById('yearInput').value;
+  
+  const filename = `club_attendance_${monthNames[monthIndex]}_${year}.json`;
+  
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(jsonString);
+  const downloadAnchorNode = document.createElement('a');
+  downloadAnchorNode.setAttribute("href", dataStr);
+  downloadAnchorNode.setAttribute("download", filename);
+  document.body.appendChild(downloadAnchorNode);
+  downloadAnchorNode.click();
+  downloadAnchorNode.remove();
+}
+
+// Функція для імпорту JSON
+function importFromJSON() {
+  // Створюємо елемент input для вибору файлу
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'application/json';
+  
+  fileInput.onchange = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const jsonData = JSON.parse(e.target.result);
+        const success = loadJSONToTable(jsonData);
+        
+        if (success) {
+          // Зберігаємо дані також в localStorage
+          saveTableData();
+          
+          // Повідомлення про успішний імпорт
+          showNotification('Дані успішно завантажено з JSON');
+        } else {
+          showNotification('Помилка завантаження даних', true);
+        }
+      } catch (error) {
+        console.error("Помилка парсингу JSON:", error);
+        showNotification('Помилка парсингу JSON файлу', true);
+      }
+    };
+    
+    reader.readAsText(file);
+  };
+  
+  fileInput.click();
+}
+
+// Функція для відображення повідомлень
+function showNotification(message, isError = false) {
+  const notification = document.createElement('div');
+  notification.textContent = message;
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: ${isError ? '#e74c3c' : '#2ecc71'};
+    color: white;
+    padding: 12px 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    z-index: 1000;
+  `;
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.style.opacity = '0';
+    notification.style.transition = 'opacity 0.5s';
+    
+    setTimeout(() => {
+      document.body.removeChild(notification);
+    }, 500);
+  }, 3000);
+}
+
+// Функція для збереження даних у хмарне сховище
+function saveToCloud() {
+  const jsonData = tableToJSON();
+  const jsonString = JSON.stringify(jsonData);
+  
+  // Тут можна реалізувати відправку даних на сервер через fetch або інші методи
+  // Наприклад:
+  /*
+  fetch('https://your-api-endpoint.com/save', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: jsonString
+  })
+  .then(response => response.json())
+  .then(data => {
+    showNotification('Дані збережено в хмарі');
+  })
+  .catch(error => {
+    showNotification('Помилка збереження в хмарі', true);
+    console.error('Error:', error);
+  });
+  */
+  
+  // Імітація збереження в хмарі для прикладу
+  setTimeout(() => {
+    showNotification('Дані збережено в хмарі (демо)');
+  }, 1000);
+}
+
+// Функція для автоматичного збереження даних
+function setupAutoSave(interval = 5 * 60 * 1000) { // за замовчуванням 5 хвилин
+  setInterval(() => {
+    saveTableData();
+    // Додаємо мінімальну індикацію збереження
+    const saveIndicator = document.createElement('div');
+    saveIndicator.textContent = '✓';
+    saveIndicator.style.cssText = `
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background-color: rgba(46, 204, 113, 0.7);
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    `;
+    
+    document.body.appendChild(saveIndicator);
+    
+    setTimeout(() => {
+      document.body.removeChild(saveIndicator);
+    }, 1000);
+  }, interval);
+}
+
+// Оновлюємо кнопки в документі
+function addJSONButtons() {
+  const buttonGroup = document.querySelector('.button-group');
+  
+  // Кнопка експорту в JSON
+  const exportJSONButton = document.createElement('button');
+  exportJSONButton.textContent = '📤 Експорт в JSON';
+  exportJSONButton.onclick = exportToJSON;
+  buttonGroup.appendChild(exportJSONButton);
+  
+  // Кнопка імпорту з JSON
+  const importJSONButton = document.createElement('button');
+  importJSONButton.textContent = '📥 Імпорт з JSON';
+  importJSONButton.onclick = importFromJSON;
+  buttonGroup.appendChild(importJSONButton);
+  
+  // Кнопка збереження в хмарі (демо)
+  const cloudSaveButton = document.createElement('button');
+  cloudSaveButton.textContent = '☁️ Зберегти в хмарі';
+  cloudSaveButton.onclick = saveToCloud;
+  buttonGroup.appendChild(cloudSaveButton);
+}
+
+// Ініціалізація нових функцій
+function initJSONFeatures() {
+  addJSONButtons();
+  setupAutoSave();
+  
+  // Додаємо слухачі подій для автоматичного збереження при зміні місяця
+  document.getElementById('monthSelect').addEventListener('change', function() {
+    // Зберігаємо дані поточного місяця перед зміною
+    saveTableData();
+  });
+  
+  document.getElementById('yearInput').addEventListener('change', function() {
+    // Зберігаємо дані поточного року перед зміною
+    saveTableData();
+  });
+  
+  // Модифікуємо початкову функцію для завантаження даних
+  const originalInitPage = window.initPage;
+  window.initPage = function() {
+    originalInitPage();
+    console.log('JSON інтеграцію активовано');
+  };
+}
+
+// Запускаємо ініціалізацію JSON функцій при завантаженні
+document.addEventListener('DOMContentLoaded', initJSONFeatures);
   </script>
 </body>
 </html>
