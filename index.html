@@ -1,3 +1,1352 @@
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Таблиця відвідуваності клубу "ЯЩІРКА"</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f9f9f9;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1, h2 {
+      color: #2c3e50;
+      text-align: center;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    .clock {
+      font-size: 3em;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    table {
+      width: 100%;
+      border-collapse: separate; /* Змінено з collapse на separate для роботи фіксованої колонки */
+      border-spacing: 0; /* Встановлюємо відступи між клітинками на 0 */
+      margin-bottom: 20px;
+      table-layout: fixed;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px 4px;
+      text-align: center;
+      font-size: 1em;
+    }
+    th {
+      border: 2px solid rebeccapurple;
+      border-radius: 20px;
+      background-color: #3498db;
+      color: rgb(10, 9, 9);
+      position: sticky;
+      top: 0;
+      z-index: 10; /* Додаємо z-index для заголовків */
+    }
+    /* Стилі для фіксованої першої колонки */
+    .name-column {
+      width: 150px;
+      position: sticky;
+      left: 0;
+      background-color: white; /* Задній фон для фіксованої колонки */
+      z-index: 5; /* Вищий z-index для перекриття інших клітинок */
+    }
+    th.name-column {
+      border: 2px solid red;
+      border-radius: 20px;
+      background-color: #3498db; /* Колір заголовка фіксованої колонки */
+      z-index: 15; /* Вищий z-index для фіксованого заголовка */
+    }
+    .day-column {
+      width: 30px;
+    }
+    .total-column, .payment-column, .balance-column {
+      width: 70px;
+      background-color: #c6eb7d;
+    }
+    input[type="text"] {
+      font-size: 20px;
+      border-radius: 1cap;
+      width: 95%;
+      padding: 5px;
+      border: 1px solid #271b48;
+      border-radius: 4px;
+      background-color: #c6eb7d;
+    }
+    input[type="number"] {
+      width: 95%;
+      padding: 5px;
+      border: 1px solid #d622b5;
+      border-radius: 20px;
+      text-align: center;
+      background-color: #d5c2c3;
+    }
+    input[type="checkbox"] {
+      transform: scale(1.2);
+      cursor: pointer;
+    }
+    .weekend {
+      background-color: #ebeb49;
+    }
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      margin: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    .button-group {
+      display: flex;
+      justify-content: center;
+      margin: 15px 0;
+      flex-wrap: wrap;
+    }
+    .calculator {
+      background-color: #eaf2f8;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .calculator table {
+      margin-bottom: 0;
+    }
+    .month-selector {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 15px;
+    }
+    .month-selector select {
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+      margin-left: 10px;
+      font-size: 2em;
+    }
+    .table-container {
+      overflow-x: auto;
+      margin-top: 20px;
+      position: relative; /* Додаємо для правильного позиціонування фіксованих елементів */
+    }
+    .hidden-day {
+      display: none;
+    }
+    .summary-container {
+      background-color: #e8f8f5;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .summary-container table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 0;
+    }
+    .summary-container th {
+      
+      border-radius: 20px;
+      background-color: #c37e0e;
+      color: rgb(24, 23, 23);
+    }
+    .summary-container td {
+      border: 5px solid #243e46;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+    /* Додаємо тінь для фіксованої колонки, щоб показати, що вона фіксована */
+    .name-column {
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+    /* Додатковий стиль для комірок з іменами у фіксованій колонці */
+    .name-cell {
+      background-color: white;
+      position: sticky;
+      left: 0;
+      z-index: 5;
+    }
+    .dateDisplay {
+background-color: #b92935;
+    }
+    /* Покращена адаптивність для мобільних пристроїв */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+    margin: 10px 5px;
+    width: 98%;
+  }
+  
+  h1 {
+    font-size: 1.5em;
+  }
+  
+  h2, h3 {
+    font-size: 1.3em;
+  }
+  
+  .header {
+    flex-direction: column;
+    gap: 10px;
+    padding-bottom: 5px;
+  }
+  
+  .clock {
+    font-size: 1.5em;
+    margin: 0 auto;
+  }
+  
+  #dateDisplay {
+    font-size: 1em;
+    padding: 6px;
+  }
+  
+  /* Адаптивність для селектора місяця */
+  .month-selector {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .month-selector select,
+  .month-selector input[type="number"] {
+    width: 100%;
+    max-width: 250px;
+    font-size: 1em;
+  }
+  
+  /* Адаптивність для калькулятора */
+  .calculator {
+    flex-direction: column;
+    padding: 10px;
+  }
+  
+  .calculator input {
+    width: 100%;
+    max-width: 200px;
+  }
+  
+  /* Адаптивність для кнопок */
+  .button-group {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  button {
+    width: 100%;
+    padding: 12px;
+    font-size: 1em;
+    margin-bottom: 5px;
+  }
+  
+  /* Покращена адаптивність для таблиці */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Плавний скрол на iOS */
+    max-width: 100%;
+    overflow-y: visible;
+  }
+  
+  table {
+    min-width: 500px; /* Мінімальна ширина для таблиці щоб уникнути надто стиснутих даних */
+  }
+  
+  th, td {
+    padding: 6px 2px;
+    font-size: 0.9em;
+  }
+  
+  .name-column {
+    width: 120px;
+  }
+  
+  .day-column {
+    width: 30px;
+  }
+  
+  .total-column, .payment-column, .balance-column {
+    width: 60px;
+  }
+  
+  input[type="text"],
+  input[type="number"] {
+    padding: 6px 2px;
+    font-size: 0.9em;
+  }
+  
+  /* Стилі для модального вікна на мобільних */
+  .modal-content {
+    width: 95%;
+    margin: 10% auto;
+    padding: 15px;
+  }
+  
+  .modal-title {
+    font-size: 1.2em;
+  }
+  
+  /* Покращення видимості на маленьких екранах */
+  .summary-container td,
+  .summary-container th {
+    padding: 8px 4px;
+    font-size: 0.95em;
+  }
+  
+  /* Фіксація "липкої" колонки імен на мобільних */
+  .name-cell,
+  th.name-column {
+    position: sticky;
+    left: 0;
+    z-index: 5;
+  }
+  
+  /* Показуємо індикатор горизонтального скролінгу для таблиці */
+  .table-container::after {
+    content: '← прокрутіть →';
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.8em;
+    color: var(--secondary-color);
+    opacity: 0.7;
+  }
+}
+
+/* Додаткові адаптації для дуже маленьких екранів */
+@media (max-width: 480px) {
+  .container {
+    padding: 8px;
+    margin: 5px 2px;
+  }
+  
+  h1 {
+    font-size: 1.3em;
+  }
+  
+  .clock {
+    font-size: 1.3em;
+  }
+  
+  /* Зменшуємо відступи в таблиці */
+  th, td {
+    padding: 4px 2px;
+    font-size: 0.85em;
+  }
+  
+  .name-column {
+    width: 100px;
+  }
+  
+  .day-column {
+    width: 25px;
+  }
+  
+  input[type="checkbox"] {
+    transform: scale(1.1);
+  }
+  
+  /* Покращуємо зовнішній вигляд сповіщень */
+  .notification {
+    width: 90%;
+    left: 5%;
+    right: 5%;
+    font-size: 0.9em;
+    padding: 10px;
+    text-align: center;
+  }
+  
+  /* Індикатор автозбереження */
+  .save-indicator {
+    width: 25px;
+    height: 25px;
+    font-size: 0.8em;
+  }
+}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="dateDisplay"></div>
+    <div class="header">
+      <h1>Клуб "ЯЩІРКА" - Облік відвідуваності</h1>
+      <div class="clock">🕒 <span id="clock"></span></div>
+    </div>
+    
+    <div class="month-selector">
+      <label for="monthSelect">📅 Місяць:</label>
+      <select id="monthSelect" onchange="changeMonth()">
+        <option value="0" data-days="31">Січень</option>
+        <option value="1" data-days="28">Лютий</option>
+        <option value="2" data-days="31">Березень</option>
+        <option value="3" data-days="30">Квітень</option>
+        <option value="4" data-days="31">Травень</option>
+        <option value="5" data-days="30">Червень</option>
+        <option value="6" data-days="31">Липень</option>
+        <option value="7" data-days="31">Серпень</option>
+        <option value="8" data-days="30">Вересень</option>
+        <option value="9" data-days="31">Жовтень</option>
+        <option value="10" data-days="30">Листопад</option>
+        <option value="11" data-days="31">Грудень</option>
+      </select>
+      <input type="number" id="yearInput" min="2020" max="2050" value="2025" style="width: 80px; margin-left: 10px;" onchange="changeMonth()">
+    </div>
+    
+    <div class="price-display">
+      <label for="dailyRate">Вартість за день: </label>
+      <input type="number" id="dailyRate" value="500" style="width: 100px;" onchange="updateAllTotals()"> грн
+    </div>
+
+    <div class="calculator">
+      <!-- <h3>Калькулятор вартості</h3> -->
+      <table>
+        <!-- <thead>
+          <tr>
+            <th>Днів відвідувано</th>
+            <th>Вартість за день</th>
+            <th>Загальна сума</th>
+          </tr>
+        </thead> -->
+        <tbody>
+          <tr>
+            <td><input type="number" id="daysAttended" min="0" max="31" value="0" oninput="updateCalculator()"></td>
+            <td><input type="number" id="dailyRateCalc" value="500" readonly></td>
+            <td><input type="number" id="totalPayment" readonly></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="summary-container">
+      <h3>Загальна статистика</h3>
+      <table>
+        <tr>
+          <th>Всього дітей</th>
+          <th>Відвідувань (буд. дні)</th>
+          <th>Загалом до сплати</th>
+          <th>Загалом оплачено</th>
+          <th>Баланс</th>
+        </tr>
+        <tr>
+          <td id="totalChildren">0</td>
+          <td id="totalAttendance">0</td>
+          <td id="totalDue">0 грн</td>
+          <td id="totalPaid">0 грн</td>
+          <td id="totalBalance">0 грн</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="button-group">
+      <button onclick="saveTableData()">💾 Зберегти дані</button>
+      <button onclick="clearTableData()">🗑️ Очистити дані</button>
+      <button onclick="addRow()">➕ Додати дитину</button>
+      <button onclick="removeLastRow()">➖ Видалити останній рядок</button>
+      <button onclick="exportToPDF()">📄 Експорт в PDF</button>
+    </div>
+
+    <div class="table-container">
+      <table id="attendanceTable">
+        <thead>
+          <tr>
+            <th class="name-column">Ім'я дитини</th>
+            <!-- Дні місяця будуть додані через JavaScript -->
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Рядки будуть додані через JavaScript -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Глобальні змінні
+    const table = document.getElementById('attendanceTable');
+    const DEFAULT_ROWS = 20;
+    const MAX_ROWS = 30;
+    const DAILY_RATE = 500; // Базова вартість за день
+    let currentMonthDays = 31;
+    let weekendDays = []; // Масив для зберігання вихідних днів
+    
+    // Ініціалізація сторінки
+    function initPage() {
+      // Встановлюємо поточний місяць в селекторі
+      const now = new Date();
+      document.getElementById('monthSelect').value = now.getMonth();
+      document.getElementById('yearInput').value = now.getFullYear();
+      document.getElementById('dailyRate').value = DAILY_RATE;
+      document.getElementById('dailyRateCalc').value = DAILY_RATE;
+      
+      // Оновлюємо відображення днів місяця
+      setupTable();
+      
+      // Додаємо за замовчуванням рядки для 20 дітей
+      for (let i = 1; i < DEFAULT_ROWS; i++) {
+        addRow();
+      }
+      
+      // Завантажуємо збережені дані
+      loadTableData();
+      
+      // Оновлюємо калькулятор
+      updateCalculator();
+      
+      // Запускаємо годинник
+      updateClock();
+      setInterval(updateClock, 1000);
+    }
+    
+    // Оновлення годинника
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+    }
+    
+    // Підготовка таблиці: створення заголовків для днів і додавання першого рядка
+    function setupTable() {
+      // Отримуємо кількість днів у місяці
+      const monthIndex = parseInt(document.getElementById('monthSelect').value);
+      const year = parseInt(document.getElementById('yearInput').value);
+      
+      // Визначаємо кількість днів у місяці
+      const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+      currentMonthDays = daysInMonth;
+      
+      // Очищаємо заголовок таблиці, залишаючи тільки перший стовпець (Ім'я дитини)
+      const headerRow = table.querySelector('thead tr');
+      while (headerRow.children.length > 1) {
+        headerRow.removeChild(headerRow.lastChild);
+      }
+      
+      // Заповнюємо вихідні дні
+      weekendDays = [];
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, monthIndex, day);
+        const dayOfWeek = date.getDay();
+        if (dayOfWeek === 0 || dayOfWeek === 6) { // 0 - неділя, 6 - субота
+          weekendDays.push(day);
+        }
+      }
+      
+      // Додаємо заголовки для днів місяця
+      for (let day = 1; day <= daysInMonth; day++) {
+        const th = document.createElement('th');
+        th.className = 'day-column' + (weekendDays.includes(day) ? ' weekend' : '');
+        th.textContent = day.toString().padStart(2, '0');
+        headerRow.appendChild(th);
+      }
+      
+      // Додаємо заголовки для підсумкових стовпців
+      const totalTh = document.createElement('th');
+      totalTh.className = 'total-column';
+      totalTh.textContent = 'Всього';
+      headerRow.appendChild(totalTh);
+      
+      const paymentTh = document.createElement('th');
+      paymentTh.className = 'payment-column';
+      paymentTh.textContent = 'До сплати';
+      headerRow.appendChild(paymentTh);
+      
+      const paidTh = document.createElement('th');
+      paidTh.className = 'payment-column';
+      paidTh.textContent = 'Оплачено';
+      headerRow.appendChild(paidTh);
+      
+      const balanceTh = document.createElement('th');
+      balanceTh.className = 'balance-column';
+      balanceTh.textContent = 'Залишок';
+      headerRow.appendChild(balanceTh);
+      
+      // Очищаємо тіло таблиці
+      const tbody = table.querySelector('tbody');
+      while (tbody.firstChild) {
+        tbody.removeChild(tbody.firstChild);
+      }
+      
+      // Додаємо перший рядок
+      addRow();
+    }
+    
+    // Зміна місяця у вибірнику
+    function changeMonth() {
+      setupTable();
+      
+      // Додаємо за замовчуванням рядки для 20 дітей
+      for (let i = 1; i < DEFAULT_ROWS; i++) {
+        addRow();
+      }
+      
+      loadTableData();
+      updateAllTotals();
+    }
+    
+    // Оновлення калькулятора
+    function updateCalculator() {
+      const daysAttended = parseInt(document.getElementById('daysAttended').value) || 0;
+      const dailyRate = parseInt(document.getElementById('dailyRate').value) || DAILY_RATE;
+      document.getElementById('dailyRateCalc').value = dailyRate;
+      document.getElementById('totalPayment').value = daysAttended * dailyRate;
+    }
+    
+    // Оновлення підсумків для рядка
+    function updateRowTotals(row) {
+      const dailyRate = parseInt(document.getElementById('dailyRate').value) || DAILY_RATE;
+      const inputs = row.querySelectorAll('input');
+      const nameInput = inputs[0];
+      
+      // Підрахунок кількості відвіданих днів (крім вихідних)
+      let attendance = 0;
+      let totalDue = 0;
+      
+      // Перебираємо всі дні місяця
+      for (let i = 1; i <= currentMonthDays; i++) {
+        const checkbox = inputs[i];
+        if (checkbox && checkbox.checked) {
+          // Якщо це не вихідний день, враховуємо оплату
+          if (!weekendDays.includes(i)) {
+            attendance++;
+            totalDue += dailyRate;
+          }
+        }
+      }
+      
+      // Індекси підсумкових полів
+      const totalIndex = currentMonthDays + 1;
+      const dueIndex = currentMonthDays + 2;
+      const paidIndex = currentMonthDays + 3;
+      const balanceIndex = currentMonthDays + 4;
+      
+      // Оновлюємо підсумкові поля
+      inputs[totalIndex].value = attendance;
+      inputs[dueIndex].value = totalDue;
+      
+      // Якщо поле "Оплачено" заповнене, розраховуємо залишок
+      const paidAmount = parseInt(inputs[paidIndex].value) || 0;
+      inputs[balanceIndex].value = paidAmount - totalDue;
+    }
+    
+    // Оновлення підсумків таблиці та загальних сум
+    function updateAllTotals() {
+      const rows = table.querySelectorAll('tbody tr');
+      let totalChildren = 0;
+      let totalAttendance = 0;
+      let totalDueAmount = 0;
+      let totalPaidAmount = 0;
+      
+      rows.forEach(row => {
+        updateRowTotals(row);
+        
+        // Підрахунок загальних сум
+        const inputs = row.querySelectorAll('input');
+        const nameValue = inputs[0].value.trim();
+        const totalAttended = parseInt(inputs[currentMonthDays + 1].value) || 0;
+        const dueAmount = parseInt(inputs[currentMonthDays + 2].value) || 0;
+        const paidAmount = parseInt(inputs[currentMonthDays + 3].value) || 0;
+        
+        // Якщо рядок містить ім'я дитини, враховуємо його в загальній статистиці
+        if (nameValue) {
+          totalChildren++;
+          totalAttendance += totalAttended;
+          totalDueAmount += dueAmount;
+          totalPaidAmount += paidAmount;
+        }
+      });
+      
+      // Оновлюємо статистику
+      document.getElementById('totalChildren').textContent = totalChildren;
+      document.getElementById('totalAttendance').textContent = totalAttendance;
+      document.getElementById('totalDue').textContent = totalDueAmount + ' грн';
+      document.getElementById('totalPaid').textContent = totalPaidAmount + ' грн';
+      document.getElementById('totalBalance').textContent = (totalPaidAmount - totalDueAmount) + ' грн';
+      
+      // Оновлюємо калькулятор
+      updateCalculator();
+    }
+    
+    // Створення рядка для нової дитини
+    function createTableRow() {
+      const tr = document.createElement('tr');
+      
+      // Додаємо комірку для імені з класом для фіксованої колонки
+      const nameTd = document.createElement('td');
+      nameTd.className = 'name-cell'; // Додаємо клас для фіксованої комірки
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.placeholder = 'Введіть ім\'я';
+      nameTd.appendChild(nameInput);
+      tr.appendChild(nameTd);
+      
+      // Додаємо комірки для кожного дня місяця
+      for (let day = 1; day <= currentMonthDays; day++) {
+        const td = document.createElement('td');
+        if (weekendDays.includes(day)) {
+          td.className = 'weekend';
+        }
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.dataset.day = day;
+        td.appendChild(checkbox);
+        tr.appendChild(td);
+      }
+      
+      // Додаємо підсумкові комірки
+      // Всього днів
+      const totalTd = document.createElement('td');
+      const totalInput = document.createElement('input');
+      totalInput.type = 'number';
+      totalInput.readOnly = true;
+      totalInput.value = '0';
+      totalTd.appendChild(totalInput);
+      tr.appendChild(totalTd);
+      
+      // До сплати
+      const dueTd = document.createElement('td');
+      const dueInput = document.createElement('input');
+      dueInput.type = 'number';
+      dueInput.readOnly = true;
+      dueInput.value = '0';
+      dueTd.appendChild(dueInput);
+      tr.appendChild(dueTd);
+      
+      // Оплачено
+      const paidTd = document.createElement('td');
+      const paidInput = document.createElement('input');
+      paidInput.type = 'number';
+      paidInput.value = '0';
+      paidInput.min = '0';
+      paidTd.appendChild(paidInput);
+      tr.appendChild(paidTd);
+      
+      // Залишок
+      const balanceTd = document.createElement('td');
+      const balanceInput = document.createElement('input');
+      balanceInput.type = 'number';
+      balanceInput.readOnly = true;
+      balanceInput.value = '0';
+      balanceTd.appendChild(balanceInput);
+      tr.appendChild(balanceTd);
+      
+      return tr;
+    }
+    
+    // Додавання нового рядка в таблицю
+    function addRow() {
+      const tbody = table.querySelector('tbody');
+      if (tbody.children.length >= MAX_ROWS) {
+        alert(`Досягнуто максимальну кількість рядків (${MAX_ROWS})`);
+        return;
+      }
+      
+      const newRow = createTableRow();
+      tbody.appendChild(newRow);
+      updateRowTotals(newRow);
+      updateAllTotals();
+      
+      // Додаємо обробники подій для нового рядка
+      const inputs = newRow.querySelectorAll('input');
+      inputs.forEach(input => {
+        if (input.type === 'checkbox') {
+          input.addEventListener('change', () => {
+            updateRowTotals(newRow);
+            updateAllTotals();
+            saveTableData();
+          });
+        } else if (!input.readOnly) {
+          input.addEventListener('input', () => {
+            updateRowTotals(newRow);
+            updateAllTotals();
+            saveTableData();
+          });
+        }
+      });
+    }
+    
+    // Видалення останнього рядка
+    function removeLastRow() {
+      const tbody = table.querySelector('tbody');
+      if (tbody.children.length <= DEFAULT_ROWS) {
+        alert(`Неможливо видалити рядки. Мінімальна кількість рядків: ${DEFAULT_ROWS}`);
+        return;
+      }
+      
+      if (confirm('Ви впевнені, що хочете видалити останній рядок?')) {
+        tbody.removeChild(tbody.lastChild);
+        saveTableData();
+        updateAllTotals();
+      }
+    }
+    
+    // Збереження даних таблиці в localStorage
+    function saveTableData() {
+      const data = [];
+      const monthIndex = document.getElementById('monthSelect').value;
+      const year = document.getElementById('yearInput').value;
+      const dailyRate = document.getElementById('dailyRate').value;
+      const rows = table.querySelectorAll('tbody tr');
+      
+      rows.forEach(row => {
+        const inputs = row.querySelectorAll('input');
+        const rowData = {
+          name: inputs[0].value,
+          days: [],
+          paid: inputs[currentMonthDays + 3].value
+        };
+        
+        // Зберігаємо інформацію про відвідування по днях
+        for (let i = 1; i <= currentMonthDays; i++) {
+          rowData.days.push(inputs[i].checked);
+        }
+        
+        data.push(rowData);
+      });
+      
+      // Зберігаємо в localStorage
+      const key = `club_attendance_${monthIndex}_${year}`;
+      localStorage.setItem(key, JSON.stringify(data));
+      localStorage.setItem('club_attendance_settings', JSON.stringify({
+        dailyRate: dailyRate
+      }));
+      
+      // Повідомлення про успішне збереження
+      const savedMsg = document.createElement('div');
+      savedMsg.textContent = 'Дані збережено ✓';
+      savedMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background-color: #2ecc71; color: white; padding: 10px; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
+      document.body.appendChild(savedMsg);
+      
+      setTimeout(() => {
+        document.body.removeChild(savedMsg);
+      }, 2000);
+    }
+    
+    // Завантаження даних таблиці з localStorage
+    function loadTableData() {
+      const monthIndex = document.getElementById('monthSelect').value;
+      const year = document.getElementById('yearInput').value;
+      const key = `club_attendance_${monthIndex}_${year}`;
+      const savedData = JSON.parse(localStorage.getItem(key));
+      
+      // Завантаження налаштувань
+      const settings = JSON.parse(localStorage.getItem('club_attendance_settings'));
+      if (settings) {
+        document.getElementById('dailyRate').value = settings.dailyRate;
+        document.getElementById('dailyRateCalc').value = settings.dailyRate;
+      }
+      
+      // Якщо немає даних, використовуємо порожню таблицю
+      if (!savedData || !Array.isArray(savedData)) {
+        return;
+      }
+      
+      // Очищаємо таблицю і додаємо потрібну кількість рядків
+      const tbody = table.querySelector('tbody');
+      while (tbody.firstChild) {
+        tbody.removeChild(tbody.firstChild);
+      }
+      
+      // Додаємо рядки з даними
+      savedData.forEach(rowData => {
+        const row = createTableRow();
+        tbody.appendChild(row);
+        
+        const inputs = row.querySelectorAll('input');
+        inputs[0].value = rowData.name || '';
+        
+        // Встановлюємо чекбокси
+        if (rowData.days && Array.isArray(rowData.days)) {
+          rowData.days.forEach((checked, index) => {
+            if (index < currentMonthDays) {
+              inputs[index + 1].checked = checked;
+            }
+          });
+        }
+        
+        // Встановлюємо оплату
+        inputs[currentMonthDays + 3].value = rowData.paid || 0;
+        
+        // Оновлюємо підсумки
+        updateRowTotals(row);
+        
+        // Додаємо обробники подій
+        inputs.forEach(input => {
+          if (input.type === 'checkbox') {
+            input.addEventListener('change', () => {
+              updateRowTotals(row);
+              updateAllTotals();
+              saveTableData();
+            });
+          } else if (!input.readOnly) {
+            input.addEventListener('input', () => {
+              updateRowTotals(row);
+              updateAllTotals();
+              saveTableData();
+            });
+          }
+        });
+      });
+    }
+    
+    // Очищення даних
+    function clearTableData() {
+      if (confirm('Ви впевнені, що хочете очистити всі дані?')) {
+        const monthIndex = document.getElementById('monthSelect').value;
+        const year = document.getElementById('yearInput').value;
+        const key = `club_attendance_${monthIndex}_${year}`;
+        localStorage.removeItem(key);
+        
+        // Перезавантажуємо таблицю
+        setupTable();
+        
+        // Додаємо за замовчуванням рядки для 20 дітей
+        for (let i = 1; i < DEFAULT_ROWS; i++) {
+          addRow();
+        }
+        
+        updateAllTotals();
+      }
+    }
+    
+    // Експорт в PDF
+    function exportToPDF() {
+      const monthIndex = parseInt(document.getElementById('monthSelect').value);
+      const year = document.getElementById('yearInput').value;
+      const monthNames = [
+        'Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень',
+        'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'
+      ];
+      
+      alert(`Експорт даних за ${monthNames[monthIndex]} ${year} в PDF буде доступний в наступній версії.
+
+Для експорту в PDF потрібно підключити бібліотеку jsPDF або іншу аналогічну. В поточній версії ця функція симулюється цим повідомленням.`);
+    }
+    // Зчитування даних із таблиці у масив
+  function getTableData() {
+    const rows = document.querySelectorAll("#attendance-table tbody tr");
+    const data = [];
+
+    rows.forEach(row => {
+      const name = row.querySelector("td:first-child").textContent.trim();
+      const checkboxes = row.querySelectorAll("input[type='checkbox']");
+      const values = Array.from(checkboxes).map(cb => cb.checked ? 1 : 0);
+      data.push({ name, values });
+    });
+
+    return data;
+  }
+
+  // Запис масиву у URL
+  function saveDataToURL() {
+    const data = getTableData();
+    const jsonString = JSON.stringify(data);
+    const encoded = encodeURIComponent(jsonString);
+    location.hash = "data=" + encoded;
+  }
+
+  // Читання з URL
+  function loadDataFromURL() {
+    const hash = location.hash;
+    if (hash.startsWith("#data=")) {
+      try {
+        const json = decodeURIComponent(hash.slice(6));
+        return JSON.parse(json);
+      } catch (e) {
+        console.error("Помилка декодування URL:", e);
+      }
+    }
+    return null;
+  }
+
+  // Вставлення даних у таблицю
+  function populateTableFromData(data) {
+    const rows = document.querySelectorAll("#attendance-table tbody tr");
+
+    data.forEach((entry, i) => {
+      const row = rows[i];
+      if (!row) return;
+      const checkboxes = row.querySelectorAll("input[type='checkbox']");
+      entry.values.forEach((val, j) => {
+        if (checkboxes[j]) {
+          checkboxes[j].checked = !!val;
+        }
+      });
+    });
+  }
+
+  // Додає слухачі на всі чекбокси
+  function attachCheckboxListeners() {
+    const checkboxes = document.querySelectorAll("#attendance-table input[type='checkbox']");
+    checkboxes.forEach(cb => {
+      cb.addEventListener("change", saveDataToURL);
+    });
+  }
+
+  // Запуск після завантаження
+  window.addEventListener("load", () => {
+    const data = loadDataFromURL();
+    if (data) populateTableFromData(data);
+    attachCheckboxListeners();
+  });
+    // Запускаємо ініціалізацію при завантаженні сторінки
+    window.addEventListener('load', initPage);
+
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString('uk-UA', {
+      day: 'numeric',
+      month: 'long'
+    });
+
+    document.getElementById('dateDisplay').textContent = `Сьогодні: ${formattedDate}`;
+
+    window.onload = initPage;
+ // Функція для перетворення даних таблиці в JSON
+function tableToJSON() {
+  const data = [];
+  const monthIndex = document.getElementById('monthSelect').value;
+  const year = document.getElementById('yearInput').value;
+  const dailyRate = document.getElementById('dailyRate').value;
+  const rows = table.querySelectorAll('tbody tr');
+  
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const name = inputs[0].value.trim();
+    
+    // Якщо рядок порожній, пропускаємо його
+    if (!name) return;
+    
+    const rowData = {
+      name: name,
+      days: [],
+      paid: parseInt(inputs[currentMonthDays + 3].value) || 0,
+      attendance: parseInt(inputs[currentMonthDays + 1].value) || 0,
+      due: parseInt(inputs[currentMonthDays + 2].value) || 0,
+      balance: parseInt(inputs[currentMonthDays + 4].value) || 0
+    };
+    
+    // Збираємо дані про відвідування по днях
+    for (let i = 1; i <= currentMonthDays; i++) {
+      rowData.days.push(inputs[i].checked ? 1 : 0);
+    }
+    
+    data.push(rowData);
+  });
+  
+  // Додаємо метадані
+  const metadata = {
+    month: monthIndex,
+    year: year,
+    dailyRate: dailyRate,
+    weekendDays: weekendDays,
+    generatedAt: new Date().toISOString(),
+    totalChildren: document.getElementById('totalChildren').textContent,
+    totalAttendance: document.getElementById('totalAttendance').textContent,
+    totalDue: document.getElementById('totalDue').textContent,
+    totalPaid: document.getElementById('totalPaid').textContent,
+    totalBalance: document.getElementById('totalBalance').textContent
+  };
+  
+  return {
+    metadata: metadata,
+    attendanceData: data
+  };
+}
+
+// Функція для завантаження JSON даних в таблицю
+function loadJSONToTable(jsonData) {
+  if (!jsonData || !jsonData.metadata || !jsonData.attendanceData || !Array.isArray(jsonData.attendanceData)) {
+    console.error("Неправильний формат JSON даних");
+    return false;
+  }
+  
+  try {
+    // Встановлюємо метадані
+    document.getElementById('monthSelect').value = jsonData.metadata.month;
+    document.getElementById('yearInput').value = jsonData.metadata.year;
+    document.getElementById('dailyRate').value = jsonData.metadata.dailyRate || DAILY_RATE;
+    
+    // Перезавантажуємо таблицю для нового місяця
+    setupTable();
+    
+    const tbody = table.querySelector('tbody');
+    while (tbody.firstChild) {
+      tbody.removeChild(tbody.firstChild);
+    }
+    
+    // Додаємо рядки з даними
+    jsonData.attendanceData.forEach(rowData => {
+      const row = createTableRow();
+      tbody.appendChild(row);
+      
+      const inputs = row.querySelectorAll('input');
+      inputs[0].value = rowData.name || '';
+      
+      // Встановлюємо чекбокси відвідування
+      if (rowData.days && Array.isArray(rowData.days)) {
+        rowData.days.forEach((checked, index) => {
+          if (index < currentMonthDays) {
+            inputs[index + 1].checked = checked === 1;
+          }
+        });
+      }
+      
+      // Встановлюємо оплату
+      inputs[currentMonthDays + 3].value = rowData.paid || 0;
+      
+      // Додаємо обробники подій
+      setupRowEventListeners(row);
+    });
+    
+    // Оновлюємо всі підсумки
+    updateAllTotals();
+    return true;
+  } catch (error) {
+    console.error("Помилка завантаження JSON:", error);
+    return false;
+  }
+}
+
+// Функція для відокремлення обробників подій рядка
+function setupRowEventListeners(row) {
+  const inputs = row.querySelectorAll('input');
+  inputs.forEach(input => {
+    if (input.type === 'checkbox') {
+      input.addEventListener('change', () => {
+        updateRowTotals(row);
+        updateAllTotals();
+        saveTableData();
+      });
+    } else if (!input.readOnly) {
+      input.addEventListener('input', () => {
+        updateRowTotals(row);
+        updateAllTotals();
+        saveTableData();
+      });
+    }
+  });
+}
+
+// Функція для експорту JSON
+function exportToJSON() {
+  const jsonData = tableToJSON();
+  const jsonString = JSON.stringify(jsonData, null, 2);
+  
+  // Створюємо тимчасове посилання для завантаження файлу
+  const monthNames = [
+    'Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень',
+    'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'
+  ];
+  const monthIndex = parseInt(document.getElementById('monthSelect').value);
+  const year = document.getElementById('yearInput').value;
+  
+  const filename = `club_attendance_${monthNames[monthIndex]}_${year}.json`;
+  
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(jsonString);
+  const downloadAnchorNode = document.createElement('a');
+  downloadAnchorNode.setAttribute("href", dataStr);
+  downloadAnchorNode.setAttribute("download", filename);
+  document.body.appendChild(downloadAnchorNode);
+  downloadAnchorNode.click();
+  downloadAnchorNode.remove();
+}
+
+// Функція для імпорту JSON
+function importFromJSON() {
+  // Створюємо елемент input для вибору файлу
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'application/json';
+  
+  fileInput.onchange = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const jsonData = JSON.parse(e.target.result);
+        const success = loadJSONToTable(jsonData);
+        
+        if (success) {
+          // Зберігаємо дані також в localStorage
+          saveTableData();
+          
+          // Повідомлення про успішний імпорт
+          showNotification('Дані успішно завантажено з JSON');
+        } else {
+          showNotification('Помилка завантаження даних', true);
+        }
+      } catch (error) {
+        console.error("Помилка парсингу JSON:", error);
+        showNotification('Помилка парсингу JSON файлу', true);
+      }
+    };
+    
+    reader.readAsText(file);
+  };
+  
+  fileInput.click();
+}
+
+// Функція для відображення повідомлень
+function showNotification(message, isError = false) {
+  const notification = document.createElement('div');
+  notification.textContent = message;
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: ${isError ? '#e74c3c' : '#2ecc71'};
+    color: white;
+    padding: 12px 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    z-index: 1000;
+  `;
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.style.opacity = '0';
+    notification.style.transition = 'opacity 0.5s';
+    
+    setTimeout(() => {
+      document.body.removeChild(notification);
+    }, 500);
+  }, 3000);
+}
+
+// Функція для збереження даних у хмарне сховище
+function saveToCloud() {
+  const jsonData = tableToJSON();
+  const jsonString = JSON.stringify(jsonData);
+  
+  // Тут можна реалізувати відправку даних на сервер через fetch або інші методи
+  // Наприклад:
+  /*
+  fetch('https://your-api-endpoint.com/save', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: jsonString
+  })
+  .then(response => response.json())
+  .then(data => {
+    showNotification('Дані збережено в хмарі');
+  })
+  .catch(error => {
+    showNotification('Помилка збереження в хмарі', true);
+    console.error('Error:', error);
+  });
+  */
+  
+  // Імітація збереження в хмарі для прикладу
+  setTimeout(() => {
+    showNotification('Дані збережено в хмарі (демо)');
+  }, 1000);
+}
+
+// Функція для автоматичного збереження даних
+function setupAutoSave(interval = 5 * 60 * 1000) { // за замовчуванням 5 хвилин
+  setInterval(() => {
+    saveTableData();
+    // Додаємо мінімальну індикацію збереження
+    const saveIndicator = document.createElement('div');
+    saveIndicator.textContent = '✓';
+    saveIndicator.style.cssText = `
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background-color: rgba(46, 204, 113, 0.7);
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    `;
+    
+    document.body.appendChild(saveIndicator);
+    
+    setTimeout(() => {
+      document.body.removeChild(saveIndicator);
+    }, 1000);
+  }, interval);
+}
+
+// Оновлюємо кнопки в документі
+function addJSONButtons() {
+  const buttonGroup = document.querySelector('.button-group');
+  
+  // Кнопка експорту в JSON
+  const exportJSONButton = document.createElement('button');
+  exportJSONButton.textContent = '📤 Експорт в JSON';
+  exportJSONButton.onclick = exportToJSON;
+  buttonGroup.appendChild(exportJSONButton);
+  
+  // Кнопка імпорту з JSON
+  const importJSONButton = document.createElement('button');
+  importJSONButton.textContent = '📥 Імпорт з JSON';
+  importJSONButton.onclick = importFromJSON;
+  buttonGroup.appendChild(importJSONButton);
+  
+  // Кнопка збереження в хмарі (демо)
+  const cloudSaveButton = document.createElement('button');
+  cloudSaveButton.textContent = '☁️ Зберегти в хмарі';
+  cloudSaveButton.onclick = saveToCloud;
+  buttonGroup.appendChild(cloudSaveButton);
+}
+
+// Ініціалізація нових функцій
+function initJSONFeatures() {
+  addJSONButtons();
+  setupAutoSave();
+  
+  // Додаємо слухачі подій для автоматичного збереження при зміні місяця
+  document.getElementById('monthSelect').addEventListener('change', function() {
+    // Зберігаємо дані поточного місяця перед зміною
+    saveTableData();
+  });
+  
+  document.getElementById('yearInput').addEventListener('change', function() {
+    // Зберігаємо дані поточного року перед зміною
+    saveTableData();
+  });
+  
+  // Модифікуємо початкову функцію для завантаження даних
+  const originalInitPage = window.initPage;
+  window.initPage = function() {
+    originalInitPage();
+    console.log('JSON інтеграцію активовано');
+  };
+}
+
+// Запускаємо ініціалізацію JSON функцій при завантаженні
+document.addEventListener('DOMContentLoaded', initJSONFeatures);
+
 // Скрипт для покращення роботи з мобільними пристроями
 document.addEventListener('DOMContentLoaded', function() {
   // Перевірка чи пристрій мобільний
@@ -169,3 +1518,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.head.appendChild(meta);
   }
 });
+  </script>
+</body>
+</html>
